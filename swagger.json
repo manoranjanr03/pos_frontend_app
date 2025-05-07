@@ -1,0 +1,3657 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Restaurant POS API Documentation",
+    "version": "1.0.0",
+    "description": "API documentation for the Restaurant Management System backend.",
+    "contact": { "name": "API Support" },
+    "license": { "name": "MIT" }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api/v1",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Table": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId", "readOnly": true },
+          "restaurant_id": { "type": "string", "format": "mongoId" },
+          "name": { "type": "string", "example": "T1" },
+          "capacity": { "type": "number", "example": 4 },
+          "status": {
+            "type": "string",
+            "enum": ["available", "occupied", "reserved", "blocked"],
+            "example": "available"
+          },
+          "current_order_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true
+          },
+          "notes": { "type": "string", "nullable": true },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "CreateTableDto": {
+        "type": "object",
+        "required": ["name", "capacity"],
+        "properties": {
+          "name": { "type": "string", "example": "T2" },
+          "capacity": { "type": "number", "example": 2, "minimum": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["available", "occupied", "reserved", "blocked"],
+            "description": "Optional, defaults to available"
+          },
+          "notes": { "type": "string", "nullable": true }
+        }
+      },
+      "UpdateTableDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "T2 VIP" },
+          "capacity": { "type": "number", "example": 3, "minimum": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["available", "occupied", "reserved", "blocked"]
+          },
+          "current_order_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "Set to null to clear the current order"
+          },
+          "notes": { "type": "string", "nullable": true }
+        }
+      },
+      "MenuCategory": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId", "readOnly": true },
+          "restaurant_id": { "type": "string", "format": "mongoId" },
+          "name": { "type": "string", "example": "Appetizers" },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Starters and small bites"
+          },
+          "is_active": { "type": "boolean", "default": true },
+          "display_order": { "type": "number", "default": 0 },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "CreateMenuCategoryDto": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "example": "Main Course" },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Hearty main dishes"
+          },
+          "is_active": { "type": "boolean", "default": true },
+          "display_order": { "type": "number", "default": 0 }
+        }
+      },
+      "UpdateMenuCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Soups" },
+          "description": { "type": "string", "nullable": true },
+          "is_active": { "type": "boolean" },
+          "display_order": { "type": "number" }
+        }
+      },
+      "Feedback": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId", "readOnly": true },
+          "restaurant_id": { "type": "string", "format": "mongoId" },
+          "customer_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true
+          },
+          "order_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true
+          },
+          "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+          "comment": { "type": "string", "nullable": true },
+          "contact_info": { "type": "string", "nullable": true },
+          "is_addressed": { "type": "boolean", "default": false },
+          "addressed_by": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true
+          },
+          "addressed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "CreateFeedbackDto": {
+        "type": "object",
+        "required": ["rating"],
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "Optional ID of the customer providing feedback"
+          },
+          "order_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "Optional ID of the order related to the feedback"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Rating from 1 to 5"
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional textual feedback"
+          },
+          "contact_info": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional contact info if feedback is anonymous"
+          }
+        }
+      },
+      "UpdateFeedbackDto": {
+        "type": "object",
+        "required": ["is_addressed"],
+        "properties": {
+          "is_addressed": {
+            "type": "boolean",
+            "description": "Set to true if feedback has been addressed"
+          }
+        }
+      },
+      "Customer": {
+        "type": "object",
+        "required": ["restaurant_id", "phone"],
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId" },
+          "restaurant_id": { "type": "string", "format": "mongoId" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "loyalty_points": { "type": "number" },
+          "visit_count": { "type": "number" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CustomerInput": {
+        "type": "object",
+        "required": ["restaurant_id", "phone"],
+        "properties": {
+          "restaurant_id": { "type": "string", "format": "mongoId" },
+          "name": { "type": "string", "example": "Amit Kumar" },
+          "phone": { "type": "string", "example": "9876543210" },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "amit@example.com"
+          }
+        }
+      },
+      "InventoryItem": {
+        "type": "object",
+        "required": ["name", "unit", "currentStock", "restaurant_id"],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Unique identifier for the inventory item",
+            "example": "62f7e1b9b5a5f3a9c8b5c8c1"
+          },
+          "restaurant_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the restaurant this item belongs to",
+            "example": "60f7e1b9b5a5f3a9c8b5c8a6"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the inventory item",
+            "example": "Paneer"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measurement",
+            "example": "kg"
+          },
+          "currentStock": {
+            "type": "number",
+            "description": "Current quantity in stock",
+            "example": 10
+          },
+          "low_stock_threshold": {
+            "type": "number",
+            "description": "Minimum stock level before alert (optional)",
+            "example": 2
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the stock was last updated (via adjustment)",
+            "readOnly": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the item was created",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the item record was last updated",
+            "readOnly": true
+          }
+        }
+      },
+      "InventoryItemInput": {
+        "type": "object",
+        "required": ["name", "unit", "restaurant_id"],
+        "properties": {
+          "restaurant_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the restaurant this item belongs to",
+            "example": "60f7e1b9b5a5f3a9c8b5c8a6"
+          },
+          "name": { "type": "string", "example": "Milk" },
+          "unit": { "type": "string", "example": "ltr" },
+          "currentStock": { "type": "number", "example": 50, "default": 0 },
+          "low_stock_threshold": { "type": "number", "example": 10 }
+        }
+      },
+      "UpdateStockLevelInput": {
+        "type": "object",
+        "required": ["changeAmount"],
+        "properties": {
+          "changeAmount": {
+            "type": "number",
+            "description": "The amount to add (positive) or remove (negative) from the current stock.",
+            "example": -5
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional notes about the stock adjustment (e.g., wastage, purchase order ID).",
+            "example": "Used for Order"
+          }
+        }
+      },
+      "MenuItemVariant": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the variant (e.g., Half, Full, Large)",
+            "example": "Half"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "description": "Price for this specific variant",
+            "example": 150
+          }
+        }
+      },
+      "MenuItemAddOn": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the add-on",
+            "example": "Extra Cheese"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "description": "Additional price for the add-on",
+            "example": 30
+          }
+        }
+      },
+      "MenuItem": {
+        "type": "object",
+        "required": ["name", "category", "price", "restaurant_id"],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Unique identifier for the menu item",
+            "example": "61f7e1b9b5a5f3a9c8b5c8b1"
+          },
+          "restaurant_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the restaurant this item belongs to",
+            "example": "60f7e1b9b5a5f3a9c8b5c8a6"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the menu item",
+            "example": "Paneer Butter Masala"
+          },
+          "category": {
+            "type": "string",
+            "description": "Category the item belongs to",
+            "example": "Main Course"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "description": "Base price of the menu item",
+            "example": 250
+          },
+          "tax_percentage": {
+            "type": "number",
+            "format": "float",
+            "description": "Applicable tax percentage for this item (optional)",
+            "example": 5
+          },
+          "variants": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MenuItemVariant" },
+            "description": "Different variants of the item (e.g., sizes)"
+          },
+          "add_ons": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MenuItemAddOn" },
+            "description": "Optional add-ons for the item"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Whether the item is currently active/available",
+            "default": true,
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the item was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the item was last updated"
+          }
+        }
+      },
+      "MenuItemInput": {
+        "type": "object",
+        "required": ["name", "category", "price", "restaurant_id"],
+        "properties": {
+          "restaurant_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the restaurant this item belongs to",
+            "example": "60f7e1b9b5a5f3a9c8b5c8a6"
+          },
+          "name": { "type": "string", "example": "Dal Makhani" },
+          "category": { "type": "string", "example": "Main Course" },
+          "price": { "type": "number", "format": "float", "example": 220 },
+          "tax_percentage": {
+            "type": "number",
+            "format": "float",
+            "example": 5
+          },
+          "variants": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MenuItemVariant" }
+          },
+          "add_ons": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MenuItemAddOn" }
+          },
+          "is_active": { "type": "boolean", "default": true }
+        }
+      },
+      "OrderItemAddOn": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number" }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "required": ["menu_item_id", "name", "quantity", "price"],
+        "properties": {
+          "menu_item_id": { "type": "string", "format": "mongoId" },
+          "name": { "type": "string" },
+          "quantity": { "type": "number" },
+          "price": { "type": "number" },
+          "add_ons": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItemAddOn" }
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "required": [
+          "restaurant_id",
+          "order_type",
+          "items",
+          "total_amount",
+          "net_amount",
+          "created_by"
+        ],
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId" },
+          "restaurant_id": { "type": "string", "format": "mongoId" },
+          "order_type": {
+            "type": "string",
+            "enum": ["dine-in", "takeaway", "delivery", "online"]
+          },
+          "table_no": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItem" }
+          },
+          "total_amount": { "type": "number" },
+          "tax_amount": { "type": "number" },
+          "discount": { "type": "number" },
+          "net_amount": { "type": "number" },
+          "payment_mode": {
+            "type": "string",
+            "enum": ["Cash", "Card", "UPI", "Wallet", "Pending"]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "preparing",
+              "ready",
+              "served",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "created_by": { "type": "string", "format": "mongoId" },
+          "customer_id": { "type": "string", "format": "mongoId" },
+          "notes": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OrderInput": {
+        "type": "object",
+        "required": [
+          "restaurant_id",
+          "order_type",
+          "items",
+          "total_amount",
+          "net_amount",
+          "created_by"
+        ],
+        "properties": {
+          "restaurant_id": { "type": "string", "format": "mongoId" },
+          "order_type": {
+            "type": "string",
+            "enum": ["dine-in", "takeaway", "delivery", "online"]
+          },
+          "table_no": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "menu_item_id": { "type": "string", "format": "mongoId" },
+                "quantity": { "type": "number" },
+                "add_ons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "price": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "total_amount": {
+            "type": "number",
+            "description": "Usually calculated on the server based on items and prices"
+          },
+          "tax_amount": {
+            "type": "number",
+            "description": "Usually calculated on the server"
+          },
+          "discount": { "type": "number" },
+          "net_amount": {
+            "type": "number",
+            "description": "Usually calculated on the server"
+          },
+          "payment_mode": {
+            "type": "string",
+            "enum": ["Cash", "Card", "UPI", "Wallet", "Pending"]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "preparing",
+              "ready",
+              "served",
+              "completed",
+              "cancelled"
+            ]
+          },
+          "created_by": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the user creating the order"
+          },
+          "customer_id": { "type": "string", "format": "mongoId" },
+          "notes": { "type": "string" }
+        }
+      },
+      "RecipeIngredient": {
+        "type": "object",
+        "required": ["inventory_item_id", "quantity", "unit"],
+        "properties": {
+          "inventory_item_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the inventory item used"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantity of the ingredient used"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measurement (should match inventory item's unit)"
+          }
+        }
+      },
+      "Recipe": {
+        "type": "object",
+        "required": ["menu_item_id", "ingredients"],
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId" },
+          "menu_item_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the menu item this recipe is for (unique)"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecipeIngredient" }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RecipeInput": {
+        "type": "object",
+        "required": ["menu_item_id", "ingredients"],
+        "properties": {
+          "menu_item_id": { "type": "string", "format": "mongoId" },
+          "ingredients": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RecipeIngredient" }
+          }
+        }
+      },
+      "GeoLocation": {
+        "type": "object",
+        "properties": {
+          "lat": { "type": "number" },
+          "lng": { "type": "number" }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "street": { "type": "string" },
+          "city": { "type": "string" },
+          "state": { "type": "string" },
+          "postal_code": { "type": "string" },
+          "country": { "type": "string" },
+          "geo_location": { "$ref": "#/components/schemas/GeoLocation" }
+        }
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "website": { "type": "string", "format": "url" }
+        }
+      },
+      "OperatingHoursDetail": {
+        "type": "object",
+        "properties": {
+          "open": { "type": "string", "format": "time", "example": "09:00" },
+          "close": { "type": "string", "format": "time", "example": "22:00" }
+        }
+      },
+      "OperatingHours": {
+        "type": "object",
+        "properties": {
+          "monday": { "$ref": "#/components/schemas/OperatingHoursDetail" },
+          "tuesday": { "$ref": "#/components/schemas/OperatingHoursDetail" },
+          "wednesday": { "$ref": "#/components/schemas/OperatingHoursDetail" },
+          "thursday": { "$ref": "#/components/schemas/OperatingHoursDetail" },
+          "friday": { "$ref": "#/components/schemas/OperatingHoursDetail" },
+          "saturday": { "$ref": "#/components/schemas/OperatingHoursDetail" },
+          "sunday": { "$ref": "#/components/schemas/OperatingHoursDetail" }
+        }
+      },
+      "Restaurant": {
+        "type": "object",
+        "required": ["name", "owner_id"],
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "address": { "$ref": "#/components/schemas/Address" },
+          "contact": { "$ref": "#/components/schemas/Contact" },
+          "operating_hours": { "$ref": "#/components/schemas/OperatingHours" },
+          "cuisine_types": { "type": "array", "items": { "type": "string" } },
+          "owner_id": { "type": "string", "format": "mongoId" },
+          "images": {
+            "type": "array",
+            "items": { "type": "string", "format": "url" }
+          },
+          "payment_options": { "type": "array", "items": { "type": "string" } },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "pending_approval"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RestaurantInput": {
+        "type": "object",
+        "required": ["name", "owner_id"],
+        "properties": {
+          "name": { "type": "string", "example": "My New Restaurant" },
+          "description": { "type": "string", "example": "Best food in town." },
+          "address": { "$ref": "#/components/schemas/Address" },
+          "contact": { "$ref": "#/components/schemas/Contact" },
+          "operating_hours": { "$ref": "#/components/schemas/OperatingHours" },
+          "cuisine_types": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["Italian", "Pizza"]
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the user creating/owning the restaurant"
+          },
+          "images": {
+            "type": "array",
+            "items": { "type": "string", "format": "url" }
+          },
+          "payment_options": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["Card", "UPI"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "pending_approval"],
+            "default": "pending_approval"
+          }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "required": ["order_id", "amount", "mode", "status"],
+        "properties": {
+          "_id": { "type": "string", "format": "mongoId" },
+          "order_id": { "type": "string", "format": "mongoId" },
+          "amount": { "type": "number" },
+          "mode": {
+            "type": "string",
+            "enum": ["Cash", "Card", "UPI", "Wallet"]
+          },
+          "transaction_id": {
+            "type": "string",
+            "description": "External transaction ID from payment gateway"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed", "pending"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TransactionInput": {
+        "type": "object",
+        "required": ["order_id", "amount", "mode", "status"],
+        "properties": {
+          "order_id": { "type": "string", "format": "mongoId" },
+          "amount": { "type": "number" },
+          "mode": {
+            "type": "string",
+            "enum": ["Cash", "Card", "UPI", "Wallet"]
+          },
+          "transaction_id": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["success", "failed", "pending"]
+          }
+        }
+      },
+      "UserPreferences": {
+        "type": "object",
+        "properties": {
+          "favorite_cuisines": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["Indian", "Mexican"]
+          },
+          "frequent_orders": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["Pizza", "Pasta"]
+          }
+        }
+      },
+      "UserPermissions": {
+        "type": "object",
+        "properties": {
+          "can_manage_menu": { "type": "boolean", "default": false },
+          "can_view_reports": { "type": "boolean", "default": false },
+          "can_edit_orders": { "type": "boolean", "default": false }
+        }
+      },
+      "User": {
+        "type": "object",
+        "required": ["name", "email", "password", "role", "restaurant_id"],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "Unique identifier for the user",
+            "example": "60f7e1b9b5a5f3a9c8b5c8a5"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the user (must be unique)",
+            "example": "user@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number of the user (optional)",
+            "example": 1234567890
+          },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "restaurant_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the restaurant the user belongs to",
+            "example": "60f7e1b9b5a5f3a9c8b5c8a6"
+          },
+          "profile_image": {
+            "type": "string",
+            "format": "url",
+            "description": "URL of the user's profile image (optional)",
+            "example": "https://userimages.com/img1.jpg"
+          },
+          "preferences": { "$ref": "#/components/schemas/UserPreferences" },
+          "permissions": { "$ref": "#/components/schemas/UserPermissions" },
+          "loyalty_points": {
+            "type": "number",
+            "description": "User's loyalty points (optional)",
+            "example": 120
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"],
+            "default": "active",
+            "description": "Status of the user account"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user was last updated"
+          }
+        }
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": ["admin", "manager", "staff"],
+        "description": "Role of the user within the system",
+        "example": "manager"
+      },
+      "UserInput": {
+        "type": "object",
+        "required": ["name", "email", "password", "role", "restaurant_id"],
+        "properties": {
+          "name": { "type": "string", "example": "Jane Doe" },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane.doe@example.com"
+          },
+          "phone": { "type": "string", "example": 9876543210 },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "User's password (will be hashed)",
+            "example": "StrongPassword123"
+          },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "restaurant_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID of the restaurant to associate the user with",
+            "example": "60f7e1b9b5a5f3a9c8b5c8a6"
+          },
+          "profile_image": { "type": "string", "format": "url" },
+          "preferences": { "$ref": "#/components/schemas/UserPreferences" },
+          "permissions": { "$ref": "#/components/schemas/UserPermissions" },
+          "loyalty_points": { "type": "number" },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "suspended"],
+            "default": "active"
+          }
+        }
+      },
+      "LoginUserInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User's email address for login",
+            "example": "john.doe@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "User's password for login",
+            "example": "StrongPassword123"
+          }
+        }
+      },
+      "RecordPaymentDto": {
+        "type": "object",
+        "required": ["amount", "mode"],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "description": "Amount paid",
+            "example": 150.5
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["Cash", "Card", "UPI", "Wallet"],
+            "description": "Payment mode used",
+            "example": "UPI"
+          },
+          "transaction_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Optional external transaction ID from payment gateway",
+            "example": "txn_123abc456def"
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/admin/restaurants": {
+      "post": {
+        "summary": "Create a new restaurant (Super Admin only)",
+        "tags": ["Admin - Restaurants"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RestaurantInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Restaurant created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "restaurant": {
+                          "$ref": "#/components/schemas/Restaurant"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden (Not Super Admin)" },
+          "404": { "description": "Owner user not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "get": {
+        "summary": "Get all restaurants (Super Admin only)",
+        "tags": ["Admin - Restaurants"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of all restaurants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "restaurants": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Restaurant" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/admin/restaurants/{restaurantId}": {
+      "get": {
+        "summary": "Get a single restaurant by ID (Super Admin only)",
+        "tags": ["Admin - Restaurants"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "restaurantId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the restaurant"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restaurant details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "restaurant": {
+                          "$ref": "#/components/schemas/Restaurant"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Restaurant not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "patch": {
+        "summary": "Update a restaurant (Super Admin only)",
+        "tags": ["Admin - Restaurants"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "restaurantId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the restaurant to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "owner_id": { "type": "string", "format": "mongoId" },
+                  "description": { "type": "string" },
+                  "address": { "$ref": "#/components/schemas/Address" },
+                  "contact": { "$ref": "#/components/schemas/Contact" },
+                  "cuisine_types": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "url" }
+                  },
+                  "payment_options": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["active", "inactive", "pending_approval"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Restaurant updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "restaurant": {
+                          "$ref": "#/components/schemas/Restaurant"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Restaurant or New Owner not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a restaurant (Super Admin only)",
+        "tags": ["Admin - Restaurants"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "restaurantId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the restaurant to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Restaurant deleted successfully (No Content)"
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Restaurant not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (e.g., validation error, email already exists)"
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Log in a user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginUserInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "token": {
+                      "type": "string",
+                      "description": "JWT authentication token",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request (e.g., validation error)" },
+          "401": {
+            "description": "Unauthorized (e.g., incorrect credentials)"
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get the currently logged-in user's details",
+        "tags": ["Authentication"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved user details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (e.g., token missing or invalid)"
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/customers": {
+      "post": {
+        "summary": "Create a new customer for the restaurant",
+        "tags": ["Customers"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CustomerInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Customer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "customer": { "$ref": "#/components/schemas/Customer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "customer phone exists)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/customers/restaurant": {
+      "get": {
+        "summary": "Get all customers for the user's restaurant",
+        "tags": ["Customers"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of customers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "customers": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Customer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/customers/{customerId}": {
+      "get": {
+        "summary": "Get a specific customer by ID (within user's restaurant)",
+        "tags": ["Customers"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "customerId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the customer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "customer": { "$ref": "#/components/schemas/Customer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Customer not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "patch": {
+        "summary": "Update a customer's details (within user's restaurant)",
+        "tags": ["Customers"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "customerId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the customer to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "customer": { "$ref": "#/components/schemas/Customer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "phone exists)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Customer not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a customer (within user's restaurant)",
+        "tags": ["Customers"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "customerId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the customer to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Customer deleted successfully (No Content)"
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Customer not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/customers/{customerId}/loyalty": {
+      "post": {
+        "summary": "Adjust loyalty points for a customer",
+        "tags": ["Customers"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "customerId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the customer"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["pointsChange"],
+                "properties": {
+                  "pointsChange": {
+                    "type": "number",
+                    "description": "Amount to add (positive) or deduct (negative)"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Optional reason for adjustment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Loyalty points adjusted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "customer": { "$ref": "#/components/schemas/Customer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "negative points result)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Customer not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/feedback": {
+      "post": {
+        "summary": "Submit new feedback for a restaurant",
+        "tags": ["Feedback"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/CreateFeedbackDto" },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "restaurant_id": {
+                        "type": "string",
+                        "format": "mongoId",
+                        "description": "Required if submitting to a public feedback endpoint. Otherwise, taken from authenticated user."
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Feedback submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Feedback" }
+              }
+            }
+          },
+          "400": { "description": "Bad Request (validation error)" },
+          "401": {
+            "description": "Unauthorized (if auth is required and missing/invalid)"
+          },
+          "404": {
+            "description": "Restaurant not found (if restaurant_id provided and invalid)"
+          }
+        }
+      }
+    },
+    "/feedback/restaurant": {
+      "get": {
+        "summary": "Get all feedback for the user's restaurant",
+        "tags": ["Feedback"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "is_addressed",
+            "schema": { "type": "boolean" },
+            "description": "Optional. Filter by addressed status (true or false)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of feedback entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Feedback" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/feedback/{feedbackId}": {
+      "get": {
+        "summary": "Get a specific feedback entry by ID",
+        "tags": ["Feedback"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feedbackId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the feedback entry"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Feedback details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Feedback" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Feedback not found" }
+        }
+      }
+    },
+    "/feedback/{feedbackId}/status": {
+      "patch": {
+        "summary": "Update the addressed status of a feedback entry",
+        "tags": ["Feedback"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feedbackId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the feedback to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateFeedbackDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback status updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Feedback" }
+              }
+            }
+          },
+          "400": { "description": "Bad Request (validation error)" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Feedback not found" }
+        }
+      }
+    },
+    "/inventory": {
+      "post": {
+        "summary": "Create a new inventory item",
+        "tags": ["Inventory Items"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/InventoryItemInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Inventory item created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "inventoryItem": {
+                          "$ref": "#/components/schemas/InventoryItem"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/inventory/restaurant/{restaurantId}": {
+      "get": {
+        "summary": "Get all inventory items for a specific restaurant",
+        "tags": ["Inventory Items"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "restaurantId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the restaurant"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of inventory items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "inventoryItems": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/InventoryItem"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/inventory/{itemId}": {
+      "get": {
+        "summary": "Get a single inventory item by ID",
+        "tags": ["Inventory Items"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the inventory item"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory item details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "inventoryItem": {
+                          "$ref": "#/components/schemas/InventoryItem"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Inventory item not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "patch": {
+        "summary": "Update an inventory item's details (excluding stock)",
+        "tags": ["Inventory Items"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the item to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "unit": { "type": "string" },
+                  "low_stock_threshold": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inventory item updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "inventoryItem": {
+                          "$ref": "#/components/schemas/InventoryItem"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Inventory item not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "delete": {
+        "summary": "Delete an inventory item",
+        "tags": ["Inventory Items"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the item to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Inventory item deleted successfully (No Content)"
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Inventory item not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/inventory/{itemId}/stock": {
+      "post": {
+        "summary": "Adjust the stock level of an inventory item",
+        "tags": ["Inventory Items"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the item to adjust stock for"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateStockLevelInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock level adjusted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "inventoryItem": {
+                          "$ref": "#/components/schemas/InventoryItem"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Inventory item not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/menu": {
+      "post": {
+        "summary": "Create a new menu item",
+        "tags": ["Menu Items"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MenuItemInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Menu item created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "menuItem": { "$ref": "#/components/schemas/MenuItem" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/menu/restaurant/{restaurantId}": {
+      "get": {
+        "summary": "Get all menu items for a specific restaurant",
+        "tags": ["Menu Items"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "restaurantId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the restaurant"
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": { "type": "string" },
+            "description": "Optional category to filter menu items"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of menu items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "menuItems": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/MenuItem" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/menu/{itemId}": {
+      "get": {
+        "summary": "Get a single menu item by ID",
+        "tags": ["Menu Items"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the menu item"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menu item details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "menuItem": { "$ref": "#/components/schemas/MenuItem" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "404": { "description": "Menu item not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "patch": {
+        "summary": "Update a menu item",
+        "tags": ["Menu Items"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the menu item to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "category": { "type": "string" },
+                  "price": { "type": "number" },
+                  "tax_percentage": { "type": "number" },
+                  "variants": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/MenuItemVariant" }
+                  },
+                  "add_ons": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/MenuItemAddOn" }
+                  },
+                  "is_active": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Menu item updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "menuItem": { "$ref": "#/components/schemas/MenuItem" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Menu item not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a menu item",
+        "tags": ["Menu Items"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "itemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the menu item to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Menu item deleted successfully (No Content)"
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Menu item not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/menu-categories": {
+      "post": {
+        "summary": "Create a new menu category",
+        "tags": ["Menu Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMenuCategoryDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Menu category created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MenuCategory" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "name exists)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/menu-categories/restaurant": {
+      "get": {
+        "summary": "Get all menu categories for the user's restaurant",
+        "tags": ["Menu Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of menu categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MenuCategory" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/menu-categories/{categoryId}": {
+      "get": {
+        "summary": "Get a specific menu category by ID",
+        "tags": ["Menu Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the menu category"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menu category details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MenuCategory" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Menu category not found" }
+        }
+      },
+      "patch": {
+        "summary": "Update a menu category",
+        "tags": ["Menu Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the menu category to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateMenuCategoryDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Menu category updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MenuCategory" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "name exists)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Menu category not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a menu category",
+        "tags": ["Menu Categories"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "categoryId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the menu category to delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Menu category deleted successfully (No Content)"
+          },
+          "400": {
+            "description": "Bad Request (category has associated menu items)"
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Menu category not found" }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "summary": "Create a new order",
+        "tags": ["Orders"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OrderInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "order": { "$ref": "#/components/schemas/Order" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "item unavailable": null,
+            "etc.)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Menu item or Customer not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/orders/restaurant": {
+      "get": {
+        "summary": "Get all orders for the user's restaurant",
+        "tags": ["Orders"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed",
+                "preparing",
+                "ready",
+                "served",
+                "completed",
+                "cancelled"
+              ]
+            },
+            "description": "Optional status to filter orders"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "orders": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Order" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "summary": "Get a single order by ID (within user's restaurant)",
+        "tags": ["Orders"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the order"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "order": { "$ref": "#/components/schemas/Order" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Order not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/orders/{orderId}/status": {
+      "patch": {
+        "summary": "Update the status of an order",
+        "tags": ["Orders"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the order to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "confirmed",
+                      "preparing",
+                      "ready",
+                      "served",
+                      "completed",
+                      "cancelled"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order status updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "order": { "$ref": "#/components/schemas/Order" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (invalid status",
+            "cannot update completed/cancelled order)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Order not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/orders/{orderId}/payment": {
+      "post": {
+        "summary": "Record a payment for an order",
+        "tags": ["Orders"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the order to record payment for"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecordPaymentDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment recorded and order updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "order": { "$ref": "#/components/schemas/Order" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "invalid amount": null,
+            "order already paid/cancelled)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Order not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/orders/{orderId}/kot": {
+      "get": {
+        "summary": "Get data formatted for a Kitchen Order Ticket (KOT)",
+        "tags": ["Orders"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the order"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "KOT data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "orderId": { "type": "string" },
+                    "orderType": { "type": "string" },
+                    "tableNo": { "type": "string" },
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "quantity": { "type": "number" },
+                          "addOns": { "type": "string" }
+                        }
+                      }
+                    },
+                    "notes": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Order not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/purchases": {
+      "post": {
+        "summary": "Record a new purchase entry and update stock",
+        "tags": ["Purchase Entries"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items"],
+                "properties": {
+                  "supplier": { "type": "string" },
+                  "invoice_number": { "type": "string" },
+                  "purchase_date": { "type": "string", "format": "date-time" },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "inventory_item_id",
+                        "quantity",
+                        "unit",
+                        "cost_per_unit"
+                      ],
+                      "properties": {
+                        "inventory_item_id": {
+                          "type": "string",
+                          "format": "mongoId"
+                        },
+                        "quantity": { "type": "number" },
+                        "unit": { "type": "string" },
+                        "cost_per_unit": { "type": "number" }
+                      }
+                    }
+                  },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Purchase entry recorded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": { "purchaseEntry": { "type": "object" } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "item not found": null,
+            "unit mismatch)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error / Transaction Failed" }
+        }
+      }
+    },
+    "/purchases/restaurant": {
+      "get": {
+        "summary": "Get all purchase entries for the user's restaurant",
+        "tags": ["Purchase Entries"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of purchase entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "purchaseEntries": {
+                          "type": "array",
+                          "items": { "type": "object" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/purchases/{entryId}": {
+      "get": {
+        "summary": "Get a specific purchase entry by ID",
+        "tags": ["Purchase Entries"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entryId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the purchase entry"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Purchase entry details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": { "purchaseEntry": { "type": "object" } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": {
+            "description": "Purchase entry not found in this restaurant"
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/recipes": {
+      "post": {
+        "summary": "Create or update a recipe for a menu item",
+        "description": "Creates a new recipe if one doesn't exist for the menu item, otherwise updates the existing one.",
+        "tags": ["Recipes"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecipeInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recipe updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/Recipe" }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Recipe created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/Recipe" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "item/ingredient not found": null,
+            "unit mismatch)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Menu item not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/recipes/menu-item/{menuItemId}": {
+      "get": {
+        "summary": "Get the recipe for a specific menu item",
+        "tags": ["Recipes"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "menuItemId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the menu item"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recipe details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/Recipe" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": {
+            "description": "Recipe or Menu Item not found in this restaurant"
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/recipes/{recipeId}": {
+      "delete": {
+        "summary": "Delete a recipe",
+        "tags": ["Recipes"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "recipeId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the recipe to delete"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Recipe deleted successfully (No Content)" },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Recipe not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/reports/sales-summary": {
+      "get": {
+        "summary": "Get sales summary report for a date range",
+        "tags": ["Reports"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "startDate",
+            "required": true,
+            "schema": { "type": "string", "format": "date" },
+            "description": "Start date for the report (YYYY-MM-DD)"
+          },
+          {
+            "in": "query",
+            "name": "endDate",
+            "required": true,
+            "schema": { "type": "string", "format": "date" },
+            "description": "End date for the report (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sales summary report data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "summary": {
+                          "type": "object",
+                          "properties": {
+                            "totalOrders": { "type": "number" },
+                            "totalRevenue": { "type": "number" },
+                            "totalTax": { "type": "number" },
+                            "totalDiscount": { "type": "number" },
+                            "averageOrderValue": { "type": "number" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (invalid date format or range)"
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/reports/inventory-usage": {
+      "get": {
+        "summary": "Get inventory usage report for a date range",
+        "tags": ["Reports"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "startDate",
+            "required": true,
+            "schema": { "type": "string", "format": "date" },
+            "description": "Start date for the report (YYYY-MM-DD)"
+          },
+          {
+            "in": "query",
+            "name": "endDate",
+            "required": true,
+            "schema": { "type": "string", "format": "date" },
+            "description": "End date for the report (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory usage report data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "inventoryItemId": {
+                            "type": "string",
+                            "format": "mongoId"
+                          },
+                          "itemName": { "type": "string" },
+                          "unit": { "type": "string" },
+                          "totalQuantityConsumed": { "type": "number" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (invalid date format or range)"
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/restaurants/my-restaurant": {
+      "get": {
+        "summary": "Get details of the restaurant owned/managed by the logged-in user",
+        "tags": ["Restaurant Management"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Restaurant details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "restaurant": {
+                          "$ref": "#/components/schemas/Restaurant"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": {
+            "description": "Forbidden (User not associated with a restaurant)"
+          },
+          "404": { "description": "Restaurant not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "patch": {
+        "summary": "Update details of the restaurant owned/managed by the logged-in user",
+        "tags": ["Restaurant Management"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "address": { "$ref": "#/components/schemas/Address" },
+                  "contact": { "$ref": "#/components/schemas/Contact" },
+                  "cuisine_types": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "url" }
+                  },
+                  "payment_options": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Restaurant updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "restaurant": {
+                          "$ref": "#/components/schemas/Restaurant"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Restaurant not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/tables": {
+      "post": {
+        "summary": "Create a new table for the restaurant",
+        "tags": ["Tables"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTableDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Table created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Table" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "name exists)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": {
+            "description": "Forbidden (user not admin/manager of this restaurant)"
+          }
+        }
+      }
+    },
+    "/tables/restaurant": {
+      "get": {
+        "summary": "Get all tables for the user's restaurant",
+        "tags": ["Tables"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of tables",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Table" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/tables/{tableId}": {
+      "get": {
+        "summary": "Get a specific table by ID",
+        "tags": ["Tables"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tableId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the table"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Table details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Table" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Table not found" }
+        }
+      },
+      "patch": {
+        "summary": "Update a table's details",
+        "tags": ["Tables"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tableId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the table to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTableDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Table updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Table" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "name exists)": null,
+            "invalid status transition)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Table not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a table",
+        "tags": ["Tables"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tableId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the table to delete"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Table deleted successfully (No Content)" },
+          "400": { "description": "Bad Request (table has active order)" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Table not found" }
+        }
+      }
+    },
+    "/transactions/order/{orderId}": {
+      "get": {
+        "summary": "Get all transactions for a specific order",
+        "tags": ["Transactions"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the order"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of transactions for the order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transactions": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Transaction"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Order not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/transactions/{transactionId}": {
+      "get": {
+        "summary": "Get a single transaction by ID",
+        "tags": ["Transactions"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transactionId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the transaction"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "transaction": {
+                          "$ref": "#/components/schemas/Transaction"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": {
+            "description": "Transaction not found or doesn't belong to user's restaurant"
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/users/restaurant": {
+      "post": {
+        "summary": "Create a new user (Manager/Staff) for the admin's restaurant",
+        "tags": ["Restaurant User Management"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password", "role"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "phone": { "type": "string" },
+                  "password": { "type": "string", "format": "password" },
+                  "role": { "type": "string", "enum": ["manager", "staff"] },
+                  "profile_image": { "type": "string", "format": "url" },
+                  "preferences": {
+                    "$ref": "#/components/schemas/UserPreferences"
+                  },
+                  "permissions": {
+                    "$ref": "#/components/schemas/UserPermissions"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (validation error",
+            "email exists)": null
+          },
+          "401": { "description": "Unauthorized" },
+          "403": {
+            "description": "Forbidden (Not Admin/Manager or invalid role assignment)"
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "get": {
+        "summary": "Get all users for the admin's restaurant",
+        "tags": ["Restaurant User Management"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of users in the restaurant",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "results": { "type": "integer" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/User" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/users/restaurant/{userId}": {
+      "get": {
+        "summary": "Get a specific user within the admin's restaurant",
+        "tags": ["Restaurant User Management"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the user to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "User not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "patch": {
+        "summary": "Update a user within the admin's restaurant",
+        "tags": ["Restaurant User Management"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the user to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "phone": { "type": "string" },
+                  "role": { "type": "string", "enum": ["manager", "staff"] },
+                  "profile_image": { "type": "string", "format": "url" },
+                  "preferences": {
+                    "$ref": "#/components/schemas/UserPreferences"
+                  },
+                  "permissions": {
+                    "$ref": "#/components/schemas/UserPermissions"
+                  },
+                  "loyalty_points": { "type": "number" },
+                  "status": {
+                    "type": "string",
+                    "enum": ["active", "inactive", "suspended"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "User not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user within the admin's restaurant",
+        "tags": ["Restaurant User Management"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": { "type": "string", "format": "mongoId" },
+            "description": "The ID of the user to delete"
+          }
+        ],
+        "responses": {
+          "204": { "description": "User deleted successfully (No Content)" },
+          "400": { "description": "Bad Request" },
+          "401": { "description": "Unauthorized" },
+          "403": {
+            "description": "Forbidden (e.g.",
+            "trying to delete admin)": null
+          },
+          "404": { "description": "User not found in this restaurant" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Admin - Restaurants",
+      "description": "Platform Admin operations for managing restaurants"
+    },
+    {
+      "name": "Authentication",
+      "description": "User registration and login operations"
+    },
+    {
+      "name": "Customers",
+      "description": "Customer Relationship Management (CRM) operations"
+    },
+    { "name": "Feedback", "description": "Customer feedback management" },
+    {
+      "name": "Inventory Items",
+      "description": "Operations related to inventory items and stock levels (Refactored)"
+    },
+    {
+      "name": "Menu Items",
+      "description": "Operations related to menu items (Refactored)"
+    },
+    {
+      "name": "Menu Categories",
+      "description": "Management of menu categories"
+    },
+    { "name": "Orders", "description": "Order management operations" },
+    {
+      "name": "Purchase Entries",
+      "description": "Operations for recording inventory purchases"
+    },
+    { "name": "Recipes", "description": "Recipe management for menu items" },
+    { "name": "Reports", "description": "Reporting and analytics endpoints" },
+    {
+      "name": "Restaurant Management",
+      "description": "Operations for managing a specific restaurant (by its Admin/Owner)"
+    },
+    { "name": "Tables", "description": "Restaurant table management" },
+    { "name": "Transactions", "description": "Transaction viewing operations" },
+    {
+      "name": "Restaurant User Management",
+      "description": "Operations for Restaurant Admins to manage users (Managers, Staff) within their restaurant"
+    }
+  ]
+}
