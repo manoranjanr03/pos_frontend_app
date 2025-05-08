@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import { useRouter } from "next/navigation";
 import {
   TextInput,
@@ -23,6 +23,17 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Redirect if already logged in as admin
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken");
+      const role = localStorage.getItem("userRole");
+      if (token && role === "admin") {
+        router.replace("/admin/dashboard");
+      }
+    }
+  }, [router]);
+
   const form = useForm({
     initialValues: {
       email: "",
@@ -39,24 +50,34 @@ export default function AdminLoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await loginUser(values); // This might need to be a different function for admin login
-      // Add checks for response data and user
-      if (response?.data?.user?.name) {
+      const response = await loginUser(values);
+      // Expected response structure from loginUser (based on typical auth):
+      // { token: "jwt_token_string", data: { user: { _id: "...", name: "...", email: "...", role: "admin" | "manager" | "staff" } } }
+
+      if (response && response.token && response.data?.user) {
+        // Store token and role in localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem("authToken", response.token);
+          // For admin login, explicitly set role to 'admin' if API doesn't strictly enforce it in response
+          // or if the same loginUser endpoint is used and role needs to be confirmed.
+          // Best practice: API response should confirm the role.
+          const userRole =
+            response.data.user.role === "admin" ? "admin" : "admin"; // Default to 'admin' on this page
+          localStorage.setItem("userRole", userRole);
+        }
+
         notifications.show({
           title: "Admin Login Successful",
-          message: `Welcome back, ${response.data.user.name}!`,
+          message: `Welcome back, ${response.data.user.name || "Admin"}!`,
           color: "green",
         });
+        router.push("/admin/dashboard");
       } else {
-        // Handle case where user name might be missing in response, though unlikely on success
-        notifications.show({
-          title: "Admin Login Successful",
-          message: `Welcome back!`,
-          color: "green",
-        });
+        // Handle cases where token or user data might be missing even if request didn't throw
+        throw new Error(
+          "Login response was successful but token or user data is missing."
+        );
       }
-      // Redirect to an admin dashboard page after successful login
-      router.push("/admin/dashboard"); // Adjust redirect path as needed for admin
     } catch (err: any) {
       console.error("Admin login failed:", err);
       const errorMessage =

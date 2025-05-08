@@ -10,19 +10,27 @@ import {
   SimpleGrid,
   MultiSelect,
   Title,
+  Divider, // Added
+  PasswordInput, // Added
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import type { components, paths } from "@/types/swagger"; // Import paths
+import type { components, paths } from "@/types/swagger";
 
-// Define the correct type based on the PATCH request body schema
-type UpdateMyRestaurantFormData =
-  paths["/restaurants/my-restaurant"]["patch"]["requestBody"]["content"]["application/json"];
+// Define the form data type. It needs to accommodate both restaurant fields
+// and potentially owner fields for the admin create scenario.
+export type RestaurantAndOwnerFormData = // Added export
+  paths["/restaurants/my-restaurant"]["patch"]["requestBody"]["content"]["application/json"] & {
+    owner_name?: string;
+    owner_email?: string;
+    owner_password?: string;
+  };
 
 interface RestaurantFormProps {
-  onSubmit: (values: UpdateMyRestaurantFormData) => Promise<void>; // Use correct type
-  initialValues?: Partial<UpdateMyRestaurantFormData>; // Use correct type
+  onSubmit: (values: RestaurantAndOwnerFormData) => Promise<void>; // Use combined type
+  initialValues?: Partial<RestaurantAndOwnerFormData>; // Use combined type
   isLoading?: boolean;
   submitButtonLabel?: string;
+  showOwnerFields?: boolean; // New prop to control owner fields visibility
 }
 
 export function RestaurantForm({
@@ -30,11 +38,12 @@ export function RestaurantForm({
   initialValues = {},
   isLoading = false,
   submitButtonLabel = "Save Restaurant",
+  showOwnerFields = false, // Default to false
 }: RestaurantFormProps) {
-  // Use the correct, more specific type for the form
-  const form = useForm<UpdateMyRestaurantFormData>({
+  // Use the combined type for the form
+  const form = useForm<RestaurantAndOwnerFormData>({
     initialValues: {
-      // Ensure initial values match the UpdateMyRestaurantFormData structure
+      // Restaurant fields
       name: initialValues.name ?? "",
       description: initialValues.description ?? "",
       contact: {
@@ -48,40 +57,58 @@ export function RestaurantForm({
         state: initialValues.address?.state ?? "",
         postal_code: initialValues.address?.postal_code ?? "",
         country: initialValues.address?.country ?? "",
-        // geo_location might need separate handling if editable
       },
       cuisine_types: initialValues.cuisine_types ?? [],
       payment_options: initialValues.payment_options ?? [],
-      // images might need a file upload component
       images: initialValues.images ?? [],
-      // Operating hours need a more complex input structure, omitting for simplicity for now
-      // operating_hours: initialValues.operating_hours ?? {},
-      // owner_id and status are usually not editable by the restaurant manager directly
+      // operating_hours: initialValues.operating_hours ?? {}, // Omitted for simplicity
+
+      // Owner fields (only relevant if showOwnerFields is true)
+      owner_name: initialValues.owner_name ?? "",
+      owner_email: initialValues.owner_email ?? "",
+      owner_password: "", // Always start empty for password field
     },
     validate: {
+      // Restaurant validations
       name: (value) =>
         value && value.trim().length > 0 ? null : "Restaurant name is required",
       contact: {
         email: (value) =>
           value && /^\S+@\S+$/.test(value) ? null : "Invalid email format",
-        // Add other contact validations if needed
       },
-      // Add other validations as needed
+
+      // Owner validations (only apply if fields are shown)
+      owner_name: (value) =>
+        showOwnerFields && (!value || value.trim().length === 0)
+          ? "Owner name is required"
+          : null,
+      owner_email: (value) => {
+        if (!showOwnerFields) return null;
+        if (!value || value.trim().length === 0)
+          return "Owner email is required";
+        if (!/^\S+@\S+$/.test(value)) return "Invalid owner email format";
+        return null;
+      },
+      owner_password: (value) => {
+        if (!showOwnerFields) return null;
+        if (!value || value.trim().length === 0)
+          return "Owner password is required";
+        if (value.trim().length < 6)
+          return "Owner password must be at least 6 characters";
+        return null;
+      },
     },
   });
 
   // Handler for MultiSelect which expects string[]
-  // Adjust the keyof type to the new form data type
   const handleMultiSelectChange =
-    (field: keyof UpdateMyRestaurantFormData) => (value: string[]) => {
+    (field: keyof RestaurantAndOwnerFormData) => (value: string[]) => {
       form.setFieldValue(field, value);
     };
 
-  // Update handleSubmit parameter type
-  const handleSubmit = async (values: UpdateMyRestaurantFormData) => {
-    // Filter out potentially non-editable fields if necessary before submitting
-    // Casting might not be needed if the form type matches the submit type exactly
-    const submitData = {
+  // Internal handler to prepare data before calling the passed onSubmit
+  const handleSubmitInternal = async (values: RestaurantAndOwnerFormData) => {
+    const submitData: RestaurantAndOwnerFormData = {
       name: values.name,
       description: values.description,
       contact: values.contact,
@@ -91,14 +118,20 @@ export function RestaurantForm({
       images: values.images,
       // operating_hours: values.operating_hours, // Add if implemented
     };
-    // Use the correct type in onSubmit call
-    await onSubmit(submitData);
+    // Include owner fields if they were shown/filled
+    if (showOwnerFields) {
+      submitData.owner_name = values.owner_name;
+      submitData.owner_email = values.owner_email;
+      submitData.owner_password = values.owner_password;
+    }
+    await onSubmit(submitData); // Call the passed onSubmit prop
   };
 
   return (
-    <Box component="form" onSubmit={form.onSubmit(handleSubmit)}>
+    <Box component="form" onSubmit={form.onSubmit(handleSubmitInternal)}>
       <Stack>
-        <Title order={3}>Basic Information</Title>
+        {/* Restaurant Fields */}
+        <Title order={3}>Restaurant Information</Title>
         <TextInput
           required
           label="Restaurant Name"
@@ -124,7 +157,7 @@ export function RestaurantForm({
         />
 
         <Title order={3} mt="lg">
-          Contact Details
+          Restaurant Contact Details
         </Title>
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <TextInput
@@ -150,7 +183,7 @@ export function RestaurantForm({
         </SimpleGrid>
 
         <Title order={3} mt="lg">
-          Address
+          Restaurant Address
         </Title>
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <TextInput
@@ -186,7 +219,7 @@ export function RestaurantForm({
         </SimpleGrid>
 
         <Title order={3} mt="lg">
-          Options
+          Restaurant Options
         </Title>
         <MultiSelect
           label="Payment Options Accepted"
@@ -199,6 +232,39 @@ export function RestaurantForm({
         />
         {/* Add Image Upload/Management Here */}
         {/* Add Operating Hours Input Here */}
+
+        {/* Owner Fields (Conditional) */}
+        {showOwnerFields && (
+          <>
+            <Divider
+              my="xl"
+              label="Restaurant Owner/Admin Details"
+              labelPosition="center"
+            />
+            <TextInput
+              required
+              label="Owner Full Name"
+              placeholder="Enter owner's full name"
+              {...form.getInputProps("owner_name")}
+              disabled={isLoading}
+            />
+            <TextInput
+              required
+              label="Owner Email Address"
+              placeholder="owner@example.com"
+              type="email"
+              {...form.getInputProps("owner_email")}
+              disabled={isLoading}
+            />
+            <PasswordInput
+              required
+              label="Owner Password"
+              placeholder="Enter owner's initial password"
+              {...form.getInputProps("owner_password")}
+              disabled={isLoading}
+            />
+          </>
+        )}
 
         <Group justify="flex-end" mt="xl">
           <Button type="submit" loading={isLoading}>

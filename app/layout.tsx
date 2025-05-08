@@ -3,6 +3,7 @@ import React from "react";
 import { MantineProvider, ColorSchemeScript } from "@mantine/core";
 import { Notifications } from "@mantine/notifications"; // Import Notifications
 import "@mantine/notifications/styles.css"; // Import Notifications CSS
+import { GlobalNav } from "../components/GlobalNav"; // Import GlobalNav
 
 // If you have a custom theme, import it here
 // import { theme } from "../theme";
@@ -26,9 +27,8 @@ export default function RootLayout({ children }: { children: any }) {
       <body>
         {/* If using a custom theme, add theme={theme} */}
         <MantineProvider defaultColorScheme="auto">
-          <Notifications position="top-right" />{" "}
-          {/* Add Notifications provider */}
-          {children}
+          <Notifications position="top-right" />
+          <GlobalNav>{children}</GlobalNav>
         </MantineProvider>
       </body>
     </html>

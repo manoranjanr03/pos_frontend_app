@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import { useRouter } from "next/navigation";
 import {
   TextInput,
@@ -23,6 +23,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Redirect if already logged in as a restaurant user
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken");
+      const role = localStorage.getItem("userRole");
+      if (token && (role === "manager" || role === "staff")) {
+        router.replace("/restaurants"); // Or appropriate dashboard for restaurant users
+      }
+    }
+  }, [router]);
+
   const form = useForm({
     initialValues: {
       email: "",
@@ -40,23 +51,51 @@ export default function LoginPage() {
     setError(null);
     try {
       const response = await loginUser(values);
-      // Add checks for response data and user
-      if (response?.data?.user?.name) {
+      // Expected response structure from loginUser:
+      // { token: "jwt_token_string", data: { user: { _id: "...", name: "...", email: "...", role: "admin" | "manager" | "staff" } } }
+
+      if (
+        response &&
+        response.token &&
+        response.data?.user &&
+        response.data.user.role
+      ) {
+        // Store token and role in localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem("authToken", response.token);
+          // Ensure the role is one of the expected non-admin roles
+          const userRole =
+            response.data.user.role === "manager" ||
+            response.data.user.role === "staff"
+              ? response.data.user.role
+              : "staff"; // Default to 'staff' if role is unexpected for this login type
+          localStorage.setItem("userRole", userRole);
+        }
+
         notifications.show({
           title: "Login Successful",
-          message: `Welcome back, ${response.data.user.name}!`,
+          message: `Welcome back, ${response.data.user.name || "User"}!`,
           color: "green",
         });
+        // Redirect based on role, or to a general dashboard for restaurant users
+        if (
+          response.data.user.role === "manager" ||
+          response.data.user.role === "staff"
+        ) {
+          router.push("/restaurants"); // Or a more specific dashboard if available
+        } else {
+          // Fallback or error if role is not manager/staff after user login
+          console.warn(
+            "User logged in with unexpected role:",
+            response.data.user.role
+          );
+          router.push("/"); // Or an error page
+        }
       } else {
-        // Handle case where user name might be missing in response, though unlikely on success
-        notifications.show({
-          title: "Login Successful",
-          message: `Welcome back!`,
-          color: "green",
-        });
+        throw new Error(
+          "Login response was successful but token, user data, or role is missing."
+        );
       }
-      // Redirect to a protected dashboard page after successful login
-      router.push("/restaurants"); // Adjust redirect path as needed
     } catch (err: any) {
       console.error("Login failed:", err);
       const errorMessage =

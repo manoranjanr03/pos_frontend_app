@@ -58,16 +58,19 @@ export default function MyRestaurantPage() {
       try {
         const response = await getMyRestaurant();
         // The response includes a 'data' wrapper
-        setRestaurant(response.data?.restaurant || null);
-        if (!response.data?.restaurant) {
-          setError("No restaurant associated with this account.");
+        if (response.data?.restaurant) {
+          setRestaurant(response.data.restaurant);
+        } else {
+          // No restaurant found, redirect to create page
+          router.push("/restaurants/create");
+          return; // Important to return here to avoid further state updates
         }
       } catch (err: any) {
         console.error("Failed to fetch restaurant:", err);
         if (err.response?.status === 403 || err.response?.status === 404) {
-          setError(
-            "No restaurant associated with this account or not authorized."
-          );
+          // No restaurant associated or not authorized, redirect to create
+          router.push("/restaurants/create");
+          return; // Important
         } else {
           setError(
             err.response?.data?.message || "Failed to load restaurant details."

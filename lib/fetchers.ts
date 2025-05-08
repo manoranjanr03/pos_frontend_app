@@ -24,8 +24,9 @@ type AdminCreateRestaurantData =
   paths[typeof EP.ADMIN_RESTAURANTS]["post"]["requestBody"]["content"]["application/json"];
 type AdminCreateRestaurantResponse =
   paths[typeof EP.ADMIN_RESTAURANTS]["post"]["responses"]["201"]["content"]["application/json"];
-// Update needs partial data, let's use the schema directly if path isn't specific enough
-type AdminUpdateRestaurantData = components["schemas"]["RestaurantInput"]; // Or define more specific type if needed
+// Correctly define type for PATCH payload based on its specific schema in swagger.d.ts
+type AdminUpdateRestaurantData =
+  paths["/admin/restaurants/{restaurantId}"]["patch"]["requestBody"]["content"]["application/json"];
 type AdminUpdateRestaurantResponse =
   paths["/admin/restaurants/{restaurantId}"]["patch"]["responses"]["200"]["content"]["application/json"];
 
